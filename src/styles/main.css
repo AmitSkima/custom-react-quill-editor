@@ -1,0 +1,11 @@
+@import "tailwindcss";
+
+@theme {
+    --color-placeholder-blot: oklch(54.6% 0.245 262.881);
+}
+
+@layer base {
+    .ql-placeholder {
+        @apply bg-placeholder-blot text-white px-1.5 py-0.5 rounded-md font-medium cursor-default;
+    }
+}
