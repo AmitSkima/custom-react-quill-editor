@@ -5,8 +5,12 @@ import * as Yup from "yup";
 import { useFormik } from "formik";
 import type Quill from "quill";
 
-import { ReactQuillEditor } from "@/components/ReactQuillEditor";
 import { QuillPlaceholderBlot } from "@/utils/editor/QuillPlaceholderBlot";
+
+const ReactQuillEditor = React.lazy(async () => {
+  const { ReactQuillEditor } = await import("@/components/ReactQuillEditor");
+  return { default: ReactQuillEditor };
+});
 
 const formValidation = Yup.object().shape({
   html: Yup.string().trim().required("HTML is required"),
@@ -105,12 +109,21 @@ export function App() {
           name="subject"
           className="border border-gray-300 p-2"
         />
-        <ReactQuillEditor
-          ref={quillRef}
-          defaultValue={defaultValue}
-          onChange={handleChange}
-          editorBlots={DEFAULT_EDITOR_BLOTS}
-        />
+        <React.Suspense
+          fallback={
+            <div className="flex min-h-10 items-center justify-center border border-gray-300 p-2">
+              Loading Editor...
+            </div>
+          }
+        >
+          <ReactQuillEditor
+            ref={quillRef}
+            defaultValue={defaultValue}
+            onChange={handleChange}
+            editorBlots={DEFAULT_EDITOR_BLOTS}
+          />
+        </React.Suspense>
+
         <div className="flex items-center justify-end">
           <button type="submit" className="rounded bg-blue-500 p-2 text-white">
             Submit
