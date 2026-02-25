@@ -149,7 +149,6 @@ export const ReactQuillEditor = React.forwardRef<
     );
 
     React.useEffect(() => {
-      console.log("init editor");
       const container = containerRef.current;
       if (!container) return;
 
