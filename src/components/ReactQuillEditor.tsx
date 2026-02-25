@@ -2,6 +2,7 @@ import React from "react";
 import Quill, { Delta, type EmitterSource, type Range } from "quill";
 import "quill/dist/quill.snow.css";
 
+import { ReactQuill } from "@/utils/editor/ReactQuill";
 import { QuillPlaceholderBlot } from "@/utils/editor/QuillPlaceholderBlot";
 Quill.register(QuillPlaceholderBlot);
 
@@ -82,7 +83,10 @@ export interface ReactQuillEditorProps {
  * @param ref - The ref to the Quill instance
  * @returns A React component that renders a Quill editor
  */
-export const ReactQuillEditor = React.forwardRef<Quill, ReactQuillEditorProps>(
+export const ReactQuillEditor = React.forwardRef<
+  ReactQuill,
+  ReactQuillEditorProps
+>(
   (
     {
       debug = false,
@@ -107,7 +111,7 @@ export const ReactQuillEditor = React.forwardRef<Quill, ReactQuillEditorProps>(
       };
     }, [editorBlots.enablePlaceholderBlot]);
 
-    const quillRef = ref as React.RefObject<Quill | null>;
+    const quillRef = ref as React.RefObject<ReactQuill | null>;
     const containerRef = React.useRef<HTMLDivElement>(null);
     const onChangeRef = React.useRef(onChange);
     const onTextChangeRef = React.useRef(onTextChange);
@@ -155,7 +159,7 @@ export const ReactQuillEditor = React.forwardRef<Quill, ReactQuillEditorProps>(
       const editorContainer = container.appendChild(
         container.ownerDocument.createElement("div"),
       );
-      const quill = new Quill(editorContainer, {
+      const quill = new ReactQuill(editorContainer, {
         theme: "snow",
       });
 

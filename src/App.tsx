@@ -3,9 +3,7 @@ import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import * as Yup from "yup";
 import { useFormik } from "formik";
-import type Quill from "quill";
-
-import { QuillPlaceholderBlot } from "@/utils/editor/QuillPlaceholderBlot";
+import type { ReactQuill } from "@/utils/editor/ReactQuill";
 
 const ReactQuillEditor = React.lazy(async () => {
   const { ReactQuillEditor } = await import("@/components/ReactQuillEditor");
@@ -26,7 +24,7 @@ const DEFAULT_EDITOR_BLOTS = {
 };
 
 export function App() {
-  const quillRef = React.useRef<Quill | null>(null);
+  const quillRef = React.useRef<ReactQuill | null>(null);
   const [defaultValue, setDefaultValue] = React.useState("");
 
   const { data: editorContent } = useQuery({
@@ -52,18 +50,10 @@ export function App() {
     },
   });
 
-  const handleInsertPlaceholder = () => {
-    if (quillRef.current) {
-      const lastTextBlock = quillRef.current.getSelection()?.index ?? 0;
-      quillRef.current.insertEmbed(
-        lastTextBlock,
-        QuillPlaceholderBlot.blotName,
-        {
-          key: "CANDIDATE_NAME",
-        },
-      );
-    }
-  };
+  const handleInsertPlaceholder = React.useCallback(() => {
+    if (!quillRef.current) return;
+    quillRef.current.insertPlaceholder({ key: "CANDIDATE_NAME" });
+  }, [quillRef]);
 
   const formSetValues = formik.setValues;
 
@@ -75,7 +65,6 @@ export function App() {
 
   const handleChange = React.useCallback(
     (html: string) => {
-      console.log("onChangeTriggered", html);
       formik.setFieldValue("html", html);
     },
     [formik],
