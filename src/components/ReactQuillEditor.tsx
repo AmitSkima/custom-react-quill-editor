@@ -6,42 +6,10 @@ import { QuillPlaceholderBlot } from "@/utils/editor/QuillPlaceholderBlot";
 Quill.register(QuillPlaceholderBlot);
 
 import {
-  htmlWithPlaceholderTokensToHtml,
-  semanticHtmlToPlaceholderTokens,
-} from "@/utils/editor/placeholderTokens";
-
-function deserializer(html: string, editorBlotConfig: EditorBlotConfig) {
-  if (!html) return "";
-  let deserializedHtml = html;
-  if (editorBlotConfig.enablePlaceholderBlot) {
-    deserializedHtml = semanticHtmlToPlaceholderTokens(deserializedHtml);
-  }
-  return deserializedHtml;
-}
-
-function serializer(html: string, editorBlotConfig: EditorBlotConfig) {
-  if (!html) return "";
-  let serializedHtml = html;
-  if (editorBlotConfig.enablePlaceholderBlot) {
-    serializedHtml = htmlWithPlaceholderTokensToHtml(serializedHtml);
-  }
-  return serializedHtml;
-}
-
-export function initializeEditorContent(
-  quill: Quill,
-  defaultValue: string,
-  editorBlotConfig: EditorBlotConfig = DEFAULT_EDITOR_BLOTS,
-) {
-  // Set initial content: convert {{XXX}} in HTML to placeholder blot spans so they become embeds
-  const initialHtml = defaultValue;
-  const initialDelta = initialHtml
-    ? quill.clipboard.convert({
-        html: serializer(initialHtml, editorBlotConfig),
-      })
-    : new Delta();
-  quill.setContents(initialDelta);
-}
+  DEFAULT_EDITOR_BLOTS,
+  deserializer,
+  initializeEditorContent,
+} from "@/utils/editor/initializeEditorContent";
 
 /**
  * The arguments for the text change event
@@ -61,12 +29,7 @@ export type OnSelectionChangeArgs = [
   source: EmitterSource,
 ];
 
-/**
- * The configuration for the editor blots
- */
-export interface EditorBlotConfig {
-  enablePlaceholderBlot?: boolean;
-}
+export type { EditorBlotConfig } from "@/utils/editor/initializeEditorContent";
 
 /**
  * The props for the React Quill Editor component
@@ -107,11 +70,11 @@ export interface ReactQuillEditorProps {
   editorBlots?: {
     enablePlaceholderBlot?: boolean;
   };
+  /**
+   * Whether to auto correct the editor content on load
+   */
+  autoCorrectOnLoad?: boolean;
 }
-
-const DEFAULT_EDITOR_BLOTS = {
-  enablePlaceholderBlot: true,
-};
 
 /**
  * The React Quill Editor component
@@ -131,19 +94,21 @@ export const ReactQuillEditor = React.forwardRef<Quill, ReactQuillEditorProps>(
       onLengthChange,
       onMount,
       editorBlots = DEFAULT_EDITOR_BLOTS,
+      autoCorrectOnLoad = true,
     },
     ref,
   ) => {
     const editorBlotConfig = React.useMemo(() => {
       return {
         ...DEFAULT_EDITOR_BLOTS,
-        ...editorBlots,
+        ...(editorBlots.enablePlaceholderBlot && {
+          enablePlaceholderBlot: editorBlots.enablePlaceholderBlot,
+        }),
       };
-    }, [editorBlots]);
+    }, [editorBlots.enablePlaceholderBlot]);
 
     const quillRef = ref as React.RefObject<Quill | null>;
     const containerRef = React.useRef<HTMLDivElement>(null);
-    const defaultValueRef = React.useRef(defaultValue ?? "");
     const onChangeRef = React.useRef(onChange);
     const onTextChangeRef = React.useRef(onTextChange);
     const onSelectionChangeRef = React.useRef(onSelectionChange);
@@ -196,7 +161,7 @@ export const ReactQuillEditor = React.forwardRef<Quill, ReactQuillEditorProps>(
 
       quillRef.current = quill;
 
-      initializeEditorContent(quill, defaultValueRef.current, editorBlotConfig);
+      initializeEditorContent(quill, defaultValue, editorBlotConfig);
 
       // Text change event
       quill.on(Quill.events.TEXT_CHANGE, _onTextChange);
@@ -207,6 +172,13 @@ export const ReactQuillEditor = React.forwardRef<Quill, ReactQuillEditorProps>(
       onLengthChangeRef.current?.(quill.getContents().length());
 
       onMount?.();
+
+      if (autoCorrectOnLoad) {
+        console.warn("[ReactQuillEditor] Auto correcting editor content");
+        // We need to call the text change event to auto correct the editor content
+        // Because there is no guarantee that the default value is valid HTML
+        _onTextChange(quill.getContents(), new Delta(), "silent");
+      }
 
       Quill.debug(debug);
 
@@ -225,6 +197,8 @@ export const ReactQuillEditor = React.forwardRef<Quill, ReactQuillEditorProps>(
       onMount,
       debug,
       editorBlotConfig,
+      defaultValue,
+      autoCorrectOnLoad,
     ]);
 
     return <div ref={containerRef}></div>;
