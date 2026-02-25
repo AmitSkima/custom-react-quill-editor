@@ -41,7 +41,6 @@ const EXAMPLE_HIGHLIGHT_TEXT: ReactQuillWrapperHighlightTextItem[] = [
 export function App() {
   const quillRef = React.useRef<ReactQuillWrapper | null>(null);
   const [lastChange, setLastChange] = React.useState<Range | null>(null);
-  const [defaultValue, setDefaultValue] = React.useState(DEFAULT_VALUE);
 
   const formik = useFormik({
     enableReinitialize: true,
@@ -67,12 +66,17 @@ export function App() {
     [formik],
   );
 
+  const handleReset = React.useCallback(() => {
+    if (!quillRef.current) return;
+    quillRef.current.loadHtml(DEFAULT_VALUE);
+  }, []);
+
   return (
     <div className="flex flex-col gap-4 space-y-4 p-4">
       <div className="flex items-center space-x-2">
         <button
           type="button"
-          onClick={() => setDefaultValue(DEFAULT_VALUE)}
+          onClick={handleReset}
           className="rounded-md border px-2 py-1 text-xs"
         >
           Reset
@@ -97,7 +101,7 @@ export function App() {
         >
           <ReactQuillEditor
             ref={quillRef}
-            defaultValue={defaultValue}
+            defaultValue={DEFAULT_VALUE}
             onChange={handleChange}
             onSelectionChange={setLastChange}
             editorBlots={DEFAULT_EDITOR_BLOTS}
