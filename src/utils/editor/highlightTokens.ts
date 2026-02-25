@@ -106,10 +106,14 @@ export function semanticHtmlToHighlightTokens(html: string): string {
   return out;
 }
 
+export type HighlightTooltipPlacement = "top" | "bottom" | "left" | "right";
+
 export interface HighlightTextItem {
   text: string;
   textColor: string;
   highlightColor: string;
+  hoverTextTooltip?: string;
+  hoverTooltipPlacement?: HighlightTooltipPlacement;
 }
 
 function escapeRegex(s: string): string {
@@ -151,7 +155,15 @@ export function htmlWithHighlightText(
     ]
       .filter(Boolean)
       .join("; ");
-    const replacement = `<span class="ql-highlight" style="${escapeAttr(style)}">${escapeHtml(item.text)}</span>`;
+    const tooltipAttrs = [];
+    if (item.hoverTextTooltip != null && item.hoverTextTooltip !== "") {
+      tooltipAttrs.push(`data-hover-tooltip="${escapeAttr(item.hoverTextTooltip)}"`);
+      if (item.hoverTooltipPlacement) {
+        tooltipAttrs.push(`data-tooltip-placement="${escapeAttr(item.hoverTooltipPlacement)}"`);
+      }
+    }
+    const tooltipAttrStr = tooltipAttrs.length ? " " + tooltipAttrs.join(" ") : "";
+    const replacement = `<span class="ql-highlight" style="${escapeAttr(style)}"${tooltipAttrStr}>${escapeHtml(item.text)}</span>`;
     out = out.replace(pattern, replacement);
   }
   return out;

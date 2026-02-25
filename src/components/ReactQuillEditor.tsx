@@ -209,7 +209,7 @@ export const ReactQuillEditor = React.forwardRef<
       autoCorrectOnLoad,
     ]);
 
-    return <div ref={containerRef}></div>;
+    return <div ref={containerRef} />;
   },
 );
 

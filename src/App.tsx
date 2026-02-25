@@ -30,11 +30,13 @@ const EXAMPLE_HIGHLIGHT_TEXT: ReactQuillWrapperHighlightTextItem[] = [
     text: "highlight",
     textColor: "#1e3a5f",
     highlightColor: "#93c5fd",
+    hoverTextTooltip: "This is a tooltip shown on hover of the highlight",
   },
   {
     text: "Hello",
     textColor: "#14532d",
     highlightColor: "#bbf7d0",
+    hoverTextTooltip: "Amit Chauhan",
   },
 ];
 

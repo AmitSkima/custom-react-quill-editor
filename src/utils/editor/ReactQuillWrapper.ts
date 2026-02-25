@@ -23,10 +23,15 @@ export interface ReactQuillWrapperInsertPlaceholderOptions {
   label?: string;
 }
 
+export type HighlightTooltipPlacement = "top" | "bottom" | "left" | "right";
+
 export interface ReactQuillWrapperHighlightTextItem {
   text: string;
   textColor: string;
   highlightColor: string;
+  hoverTextTooltip?: string;
+  /** Placement of the custom tooltip relative to the highlight. Default: "top". */
+  hoverTooltipPlacement?: HighlightTooltipPlacement;
 }
 
 /**
@@ -155,7 +160,12 @@ export class ReactQuillWrapper extends Quill {
     const rangesByIndex: Array<{
       index: number;
       length: number;
-      value: { textColor: string; highlightColor: string };
+        value: {
+          textColor: string;
+          highlightColor: string;
+          hoverTextTooltip?: string;
+          hoverTooltipPlacement?: HighlightTooltipPlacement;
+        };
     }> = [];
 
     for (const item of highlightText) {
@@ -168,6 +178,8 @@ export class ReactQuillWrapper extends Quill {
           value: {
             textColor: item.textColor,
             highlightColor: item.highlightColor,
+            hoverTextTooltip: item.hoverTextTooltip,
+            hoverTooltipPlacement: item.hoverTooltipPlacement,
           },
         });
       }
