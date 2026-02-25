@@ -55,13 +55,12 @@ export function App() {
     quillRef.current.insertPlaceholder({ key: "CANDIDATE_NAME" });
   }, [quillRef]);
 
-  const formSetValues = formik.setValues;
-
   React.useEffect(() => {
     if (!editorContent) return;
-    formSetValues({ html: editorContent, subject: "Hello, world!" });
-    setDefaultValue(editorContent);
-  }, [editorContent, formSetValues]);
+    if (quillRef.current) {
+      quillRef.current.loadHtml(editorContent);
+    }
+  }, [editorContent, quillRef]);
 
   const handleChange = React.useCallback(
     (html: string) => {

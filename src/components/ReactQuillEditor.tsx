@@ -159,9 +159,13 @@ export const ReactQuillEditor = React.forwardRef<
       const editorContainer = container.appendChild(
         container.ownerDocument.createElement("div"),
       );
-      const quill = new ReactQuillWrapper(editorContainer, {
-        theme: "snow",
-      });
+      const quill = new ReactQuillWrapper(
+        editorContainer,
+        {
+          theme: "snow",
+        },
+        editorBlotConfig,
+      );
 
       quillRef.current = quill;
 

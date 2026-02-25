@@ -1,6 +1,8 @@
-import Quill, { Delta } from "quill";
+import Quill, { Delta, type QuillOptions } from "quill";
 
 import { QuillPlaceholderBlot } from "@/utils/editor/QuillPlaceholderBlot";
+import type { EditorBlotConfig } from "@/components/ReactQuillEditor";
+import { initializeEditorContent } from "./initializeEditorContent";
 
 export interface ReactQuillWrapperInsertPlaceholderOptions {
   key: string;
@@ -12,6 +14,15 @@ export interface ReactQuillWrapperInsertPlaceholderOptions {
  * to reference the blot name or use insertEmbed directly.
  */
 export class ReactQuillWrapper extends Quill {
+  constructor(
+    container: HTMLElement,
+    options: QuillOptions,
+    editorBlotConfig: EditorBlotConfig,
+  ) {
+    super(container, options);
+    this.editorBlotConfig = editorBlotConfig;
+  }
+  private editorBlotConfig: EditorBlotConfig;
   /**
    * Insert a placeholder embed at the given index (or at the current selection).
    * @param options - { key } required; { label } optional (defaults to key)
@@ -28,5 +39,9 @@ export class ReactQuillWrapper extends Quill {
       label: options.label ?? options.key,
     };
     return this.insertEmbed(at, QuillPlaceholderBlot.blotName, value);
+  }
+
+  public loadHtml(html: string) {
+    initializeEditorContent(this, html, this.editorBlotConfig);
   }
 }
