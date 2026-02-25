@@ -1,8 +1,8 @@
 import Quill, { Delta, type QuillOptions } from "quill";
 
 import { QuillPlaceholderBlot } from "@/utils/editor/QuillPlaceholderBlot";
+import { initializeEditorContent } from "@/utils/editor/initializeEditorContent";
 import type { EditorBlotConfig } from "@/components/ReactQuillEditor";
-import { initializeEditorContent } from "./initializeEditorContent";
 
 export interface ReactQuillWrapperInsertPlaceholderOptions {
   key: string;
