@@ -38,6 +38,9 @@ export class ReactQuillWrapper extends Quill {
       key: options.key,
       label: options.label ?? options.key,
     };
+    // +1 is to move the cursor after the placeholder token.
+    // [Note]: Whole blot is considered as 1 token.
+    this.setSelection(at + 1);
     return this.insertEmbed(at, QuillPlaceholderBlot.blotName, value);
   }
 

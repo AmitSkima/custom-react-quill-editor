@@ -8,4 +8,8 @@
   .ql-placeholder {
     @apply bg-placeholder-blot cursor-default rounded-md px-1.5 py-0.5 font-medium text-white;
   }
+
+  button {
+    @apply cursor-pointer disabled:cursor-not-allowed;
+  }
 }

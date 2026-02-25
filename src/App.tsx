@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import * as Yup from "yup";
 import { useFormik } from "formik";
 import type { ReactQuillWrapper } from "@/utils/editor/ReactQuillWrapper";
+import type { Range } from "quill";
 
 const ReactQuillEditor = React.lazy(async () => {
   const { ReactQuillEditor } = await import("@/components/ReactQuillEditor");
@@ -25,7 +26,8 @@ const DEFAULT_EDITOR_BLOTS = {
 
 export function App() {
   const quillRef = React.useRef<ReactQuillWrapper | null>(null);
-  const [defaultValue, setDefaultValue] = React.useState("");
+  const [lastChange, setLastChange] = React.useState<Range | null>(null);
+  const [defaultValue, setDefaultValue] = React.useState(DEFAULT_VALUE);
 
   const { data: editorContent } = useQuery({
     queryKey: ["editor-content"],
@@ -33,7 +35,7 @@ export function App() {
       return await new Promise((resolve) => {
         setTimeout(() => {
           resolve(DEFAULT_VALUE);
-        }, 1000);
+        }, 2000);
       });
     },
   });
@@ -41,8 +43,8 @@ export function App() {
   const formik = useFormik({
     enableReinitialize: true,
     initialValues: {
-      html: "",
-      subject: "",
+      html: DEFAULT_VALUE_TWO,
+      subject: "Test Subject for React Quill Editor",
     },
     validationSchema: formValidation,
     onSubmit: (values) => {
@@ -108,6 +110,7 @@ export function App() {
             ref={quillRef}
             defaultValue={defaultValue}
             onChange={handleChange}
+            onSelectionChange={setLastChange}
             editorBlots={DEFAULT_EDITOR_BLOTS}
           />
         </React.Suspense>
@@ -120,8 +123,16 @@ export function App() {
       </form>
 
       <div className="flex flex-col space-y-4">
+        <div className="state">
+          <div className="state-title">Current Range:</div>
+          {lastChange ? JSON.stringify(lastChange) : "Empty"}
+        </div>
         <div>
-          <button type="button" onClick={handleInsertPlaceholder}>
+          <button
+            type="button"
+            onClick={handleInsertPlaceholder}
+            className="rounded-md border px-2 py-1 text-xs"
+          >
             Insert Placeholder
           </button>
         </div>
