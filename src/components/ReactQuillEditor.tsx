@@ -180,7 +180,6 @@ export const ReactQuillEditor = React.forwardRef<
 
       if (autoCorrectOnLoad) {
         console.warn("[ReactQuillEditor] Auto correcting editor content");
-        console.log(quill.getContents());
         // We need to call the text change event to auto correct the editor content
         // Because there is no guarantee that the default value is valid HTML
         _onTextChange(quill.getContents(), new Delta(), "silent");
