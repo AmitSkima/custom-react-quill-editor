@@ -1,7 +1,12 @@
 import Embed from "quill/blots/embed";
+import {
+  htmlWithPlaceholderTokensToHtml,
+  semanticHtmlToPlaceholderTokens,
+} from "@/utils/editor/placeholderTokens";
 
 /**
- * The placeholder blot for the Quill editor
+ * Placeholder blot for the Quill editor.
+ * Defines how it is stored ({{KEY}}) and how storage is converted back for the editor.
  */
 export class QuillPlaceholderBlot extends Embed {
   static blotName = "placeholder";
@@ -25,5 +30,15 @@ export class QuillPlaceholderBlot extends Embed {
       key: node.getAttribute("data-key")!,
       label: node.getAttribute("data-label") || node.textContent || "",
     };
+  }
+
+  /** Editor HTML (blot markup) → storage HTML ({{KEY}} tokens). */
+  static storageFromEditorHtml(html: string): string {
+    return semanticHtmlToPlaceholderTokens(html);
+  }
+
+  /** Storage HTML ({{KEY}} tokens) → editor HTML (blot markup) for clipboard.convert. */
+  static editorHtmlFromStorage(html: string): string {
+    return htmlWithPlaceholderTokensToHtml(html);
   }
 }

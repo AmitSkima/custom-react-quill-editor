@@ -1,17 +1,8 @@
 import Quill, { Delta, type QuillOptions } from "quill";
 
-import { QuillPlaceholderBlot } from "@/utils/editor/QuillPlaceholderBlot";
 import { QuillHighlightBlot } from "@/utils/editor/QuillHighlightBlot";
+import { QuillPlaceholderBlot } from "@/utils/editor/QuillPlaceholderBlot";
 import { findTextRangesInDelta } from "@/utils/editor/highlightUtils";
-import {
-  htmlWithHighlightText,
-  htmlWithHighlightTokensToHtml,
-  semanticHtmlToHighlightTokens,
-} from "@/utils/editor/highlightTokens";
-import {
-  htmlWithPlaceholderTokensToHtml,
-  semanticHtmlToPlaceholderTokens,
-} from "@/utils/editor/placeholderTokens";
 
 export interface ReactQuillWrapperEditorBlotConfig {
   enablePlaceholderBlot?: boolean;
@@ -63,37 +54,35 @@ export class ReactQuillWrapper extends Quill {
   }
 
   /**
-   * Serialize raw/storage HTML into editor-ready HTML (tokens → blot markup).
-   * Order: placeholder tokens → highlight tokens (data-highlight) → highlightText (wrap plain text).
-   * Uses this.editorBlotConfig and optional highlightText so clipboard.convert produces the right Delta.
+   * Serialize storage HTML into editor-ready HTML. Each enabled blot converts its own token/markup
+   * via static editorHtmlFromStorage (placeholders → {{KEY}} to span; highlights → data-highlight + highlightText wrap).
    */
   public serialize(html: string): string {
     if (!html) return "";
     let out = html;
     if (this.editorBlotConfig.enablePlaceholderBlot) {
-      out = htmlWithPlaceholderTokensToHtml(out);
+      out = QuillPlaceholderBlot.editorHtmlFromStorage(out);
     }
     if (this.editorBlotConfig.enableHighlightBlot) {
-      out = htmlWithHighlightTokensToHtml(out);
-      if (this.highlightText?.length) {
-        out = htmlWithHighlightText(out, this.highlightText);
-      }
+      out = QuillHighlightBlot.editorHtmlFromStorage(out, {
+        highlightText: this.highlightText,
+      });
     }
     return out;
   }
 
   /**
-   * Deserialize HTML from the editor for storage (blot markup → tokens).
-   * Uses this.editorBlotConfig to decide which blot types to convert.
-   * Normalizes &nbsp; to space so the stored value uses plain spaces.
+   * Deserialize editor HTML for storage. Each enabled blot converts its own markup to storage form
+   * via static storageFromEditorHtml (placeholder span → {{KEY}}; highlight span → plain text).
+   * Normalizes &nbsp; to space.
    */
   public deserialize(html?: string): string {
     let out = html ?? this.getSemanticHTML();
     if (this.editorBlotConfig.enablePlaceholderBlot) {
-      out = semanticHtmlToPlaceholderTokens(out);
+      out = QuillPlaceholderBlot.storageFromEditorHtml(out);
     }
     if (this.editorBlotConfig.enableHighlightBlot) {
-      out = semanticHtmlToHighlightTokens(out);
+      out = QuillHighlightBlot.storageFromEditorHtml(out);
     }
     out = out.replace(/&nbsp;/g, " ");
     return out;

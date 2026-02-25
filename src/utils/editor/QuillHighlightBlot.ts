@@ -1,4 +1,10 @@
 import Inline from "quill/blots/inline";
+import {
+  htmlWithHighlightText,
+  htmlWithHighlightTokensToHtml,
+  semanticHtmlToHighlightTokens,
+} from "@/utils/editor/highlightTokens";
+import type { HighlightTextItem } from "@/utils/editor/highlightTokens";
 
 export type HighlightTooltipPlacement = "top" | "bottom" | "left" | "right";
 
@@ -138,14 +144,37 @@ function hideTooltip(node: HTMLElement): void {
     undefined;
 }
 
+/** Context passed when converting storage HTML to editor HTML (e.g. highlightText for wrapping). */
+export interface HighlightStorageContext {
+  highlightText?: HighlightTextItem[];
+}
+
 /**
  * Inline blot for highlighted text. The text remains editable; only styling is applied.
  * Tooltip is shown on hover via a div appended to body (data-hover-tooltip, data-tooltip-placement).
+ * Defines how it is stored (plain text, no highlight markup) and how storage is converted for the editor.
  */
 export class QuillHighlightBlot extends Inline {
   static blotName = "highlight";
   static tagName = "span";
   static className = "ql-highlight";
+
+  /** Editor HTML (blot markup) → storage HTML (highlight spans stripped to inner text). */
+  static storageFromEditorHtml(html: string): string {
+    return semanticHtmlToHighlightTokens(html);
+  }
+
+  /** Storage HTML → editor HTML (data-highlight tokens → blot markup; optional highlightText wrap). */
+  static editorHtmlFromStorage(
+    html: string,
+    context?: HighlightStorageContext,
+  ): string {
+    let out = htmlWithHighlightTokensToHtml(html);
+    if (context?.highlightText?.length) {
+      out = htmlWithHighlightText(out, context.highlightText);
+    }
+    return out;
+  }
 
   static create(value: HighlightBlotValue) {
     const node = super.create() as HTMLElement;
