@@ -9,6 +9,12 @@
     @apply bg-placeholder-blot cursor-default rounded-md px-1.5 py-0.5 font-medium text-white;
   }
 
+  /* Highlight blot: editable text with inline styles; fallback if styles missing */
+  .ql-highlight {
+    border-radius: 0.125rem;
+    padding: 0 0.125rem;
+  }
+
   button {
     @apply cursor-pointer disabled:cursor-not-allowed;
   }

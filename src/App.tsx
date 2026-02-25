@@ -1,9 +1,11 @@
 import React from "react";
 
-import { useQuery } from "@tanstack/react-query";
 import * as Yup from "yup";
 import { useFormik } from "formik";
-import type { ReactQuillWrapper } from "@/utils/editor/ReactQuillWrapper";
+import type {
+  ReactQuillWrapper,
+  ReactQuillWrapperHighlightTextItem,
+} from "@/utils/editor/ReactQuillWrapper";
 import type { Range } from "quill";
 
 const ReactQuillEditor = React.lazy(async () => {
@@ -16,34 +18,35 @@ const formValidation = Yup.object().shape({
   subject: Yup.string().trim().required("Subject is required"),
 });
 
-const DEFAULT_VALUE = `<div>Hello,&nbsp;world!</div><p></p><p>Sunny&nbsp;{{CANDIDATE_NAME}}</span>aafasdfa&nbsp;<a href="amitchauhan.me" rel="noopener noreferrer" target="_blank">dsadfasd</a>&nbsp;</p><p></p><p>This&nbsp;is&nbsp;a&nbsp;paragraph&nbsp;with&nbsp;a&nbsp;placeholder&nbsp;{{CANDIDATE_NAME}}</span>&nbsp;&nbsp;&nbsp;{{HELLO_MY_NAME_IS_Amit}} </span></p>`;
-
-const DEFAULT_VALUE_TWO = `<h1>Hello,&nbsp;world!</h1><p></p><p>Amit&nbsp;{{CANDIDATE_NAME}}</span>aafasdfa&nbsp;<a href="amitchauhan.me" rel="noopener noreferrer" target="_blank">dsadfasd</a>&nbsp;</p><p></p><p>This&nbsp;is&nbsp;a&nbsp;paragraph&nbsp;with&nbsp;a&nbsp;placeholder&nbsp;{{CANDIDATE_NAME}}</span>&nbsp;&nbsp;&nbsp;{{HELLO_MY_NAME_IS_Amit}} </span></p>`;
+const DEFAULT_VALUE = `<h1>Hello, world!</h1><p>This is a paragraph with a placeholder {{CANDIDATE_NAME}}</p><p></p><p>This is a paragraph with a highlight</p>`;
 
 const DEFAULT_EDITOR_BLOTS = {
   enablePlaceholderBlot: true,
+  enableHighlightBlot: true,
 };
+
+const EXAMPLE_HIGHLIGHT_TEXT: ReactQuillWrapperHighlightTextItem[] = [
+  {
+    text: "highlight",
+    textColor: "#1e3a5f",
+    highlightColor: "#93c5fd",
+  },
+  {
+    text: "Hello",
+    textColor: "#14532d",
+    highlightColor: "#bbf7d0",
+  },
+];
 
 export function App() {
   const quillRef = React.useRef<ReactQuillWrapper | null>(null);
   const [lastChange, setLastChange] = React.useState<Range | null>(null);
   const [defaultValue, setDefaultValue] = React.useState(DEFAULT_VALUE);
 
-  const { data: editorContent } = useQuery({
-    queryKey: ["editor-content"],
-    queryFn: async (): Promise<string> => {
-      return await new Promise((resolve) => {
-        setTimeout(() => {
-          resolve(DEFAULT_VALUE);
-        }, 2000);
-      });
-    },
-  });
-
   const formik = useFormik({
     enableReinitialize: true,
     initialValues: {
-      html: DEFAULT_VALUE_TWO,
+      html: DEFAULT_VALUE,
       subject: "Test Subject for React Quill Editor",
     },
     validationSchema: formValidation,
@@ -56,13 +59,6 @@ export function App() {
     if (!quillRef.current) return;
     quillRef.current.insertPlaceholder({ key: "CANDIDATE_NAME" });
   }, [quillRef]);
-
-  React.useEffect(() => {
-    if (!editorContent) return;
-    if (quillRef.current) {
-      quillRef.current.loadHtml(editorContent);
-    }
-  }, [editorContent, quillRef]);
 
   const handleChange = React.useCallback(
     (html: string) => {
@@ -79,14 +75,7 @@ export function App() {
           onClick={() => setDefaultValue(DEFAULT_VALUE)}
           className="rounded-md border px-2 py-1 text-xs"
         >
-          Set Default Value
-        </button>
-        <button
-          type="button"
-          onClick={() => setDefaultValue(DEFAULT_VALUE_TWO)}
-          className="rounded-md border px-2 py-1 text-xs"
-        >
-          Set Default Value Two
+          Reset
         </button>
       </div>
       <form
@@ -112,6 +101,7 @@ export function App() {
             onChange={handleChange}
             onSelectionChange={setLastChange}
             editorBlots={DEFAULT_EDITOR_BLOTS}
+            highlightText={EXAMPLE_HIGHLIGHT_TEXT}
           />
         </React.Suspense>
 
