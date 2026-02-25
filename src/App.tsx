@@ -3,7 +3,7 @@ import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import * as Yup from "yup";
 import { useFormik } from "formik";
-import type { ReactQuill } from "@/utils/editor/ReactQuill";
+import type { ReactQuillWrapper } from "@/utils/editor/ReactQuillWrapper";
 
 const ReactQuillEditor = React.lazy(async () => {
   const { ReactQuillEditor } = await import("@/components/ReactQuillEditor");
@@ -24,7 +24,7 @@ const DEFAULT_EDITOR_BLOTS = {
 };
 
 export function App() {
-  const quillRef = React.useRef<ReactQuill | null>(null);
+  const quillRef = React.useRef<ReactQuillWrapper | null>(null);
   const [defaultValue, setDefaultValue] = React.useState("");
 
   const { data: editorContent } = useQuery({

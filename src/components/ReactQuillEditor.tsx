@@ -1,10 +1,10 @@
 import React from "react";
-import Quill, { Delta, type EmitterSource, type Range } from "quill";
+import { Delta, type EmitterSource, type Range } from "quill";
 import "quill/dist/quill.snow.css";
 
-import { ReactQuill } from "@/utils/editor/ReactQuill";
+import { ReactQuillWrapper } from "@/utils/editor/ReactQuillWrapper";
 import { QuillPlaceholderBlot } from "@/utils/editor/QuillPlaceholderBlot";
-Quill.register(QuillPlaceholderBlot);
+ReactQuillWrapper.register(QuillPlaceholderBlot);
 
 import {
   DEFAULT_EDITOR_BLOTS,
@@ -84,7 +84,7 @@ export interface ReactQuillEditorProps {
  * @returns A React component that renders a Quill editor
  */
 export const ReactQuillEditor = React.forwardRef<
-  ReactQuill,
+  ReactQuillWrapper,
   ReactQuillEditorProps
 >(
   (
@@ -111,7 +111,7 @@ export const ReactQuillEditor = React.forwardRef<
       };
     }, [editorBlots.enablePlaceholderBlot]);
 
-    const quillRef = ref as React.RefObject<ReactQuill | null>;
+    const quillRef = ref as React.RefObject<ReactQuillWrapper | null>;
     const containerRef = React.useRef<HTMLDivElement>(null);
     const onChangeRef = React.useRef(onChange);
     const onTextChangeRef = React.useRef(onTextChange);
@@ -159,7 +159,7 @@ export const ReactQuillEditor = React.forwardRef<
       const editorContainer = container.appendChild(
         container.ownerDocument.createElement("div"),
       );
-      const quill = new ReactQuill(editorContainer, {
+      const quill = new ReactQuillWrapper(editorContainer, {
         theme: "snow",
       });
 
@@ -168,10 +168,10 @@ export const ReactQuillEditor = React.forwardRef<
       initializeEditorContent(quill, defaultValue, editorBlotConfig);
 
       // Text change event
-      quill.on(Quill.events.TEXT_CHANGE, _onTextChange);
+      quill.on(ReactQuillWrapper.events.TEXT_CHANGE, _onTextChange);
 
       // Selection change event
-      quill.on(Quill.events.SELECTION_CHANGE, _onSelectionChange);
+      quill.on(ReactQuillWrapper.events.SELECTION_CHANGE, _onSelectionChange);
 
       onLengthChangeRef.current?.(quill.getContents().length());
 
@@ -184,15 +184,18 @@ export const ReactQuillEditor = React.forwardRef<
         _onTextChange(quill.getContents(), new Delta(), "silent");
       }
 
-      Quill.debug(debug);
+      ReactQuillWrapper.debug(debug);
 
       return () => {
         quillRef.current = null;
         container.innerHTML = "";
 
-        quill.off(Quill.events.TEXT_CHANGE, _onTextChange);
-        quill.off(Quill.events.SELECTION_CHANGE, _onSelectionChange);
-        Quill.debug(false);
+        quill.off(ReactQuillWrapper.events.TEXT_CHANGE, _onTextChange);
+        quill.off(
+          ReactQuillWrapper.events.SELECTION_CHANGE,
+          _onSelectionChange,
+        );
+        ReactQuillWrapper.debug(false);
       };
     }, [
       quillRef,

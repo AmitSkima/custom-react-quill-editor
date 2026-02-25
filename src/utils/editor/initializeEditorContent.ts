@@ -1,9 +1,8 @@
-import Quill, { Delta } from "quill";
-
 import {
   htmlWithPlaceholderTokensToHtml,
   semanticHtmlToPlaceholderTokens,
-} from "./placeholderTokens";
+} from "@/utils/editor/placeholderTokens";
+import type { ReactQuillWrapper } from "@/utils/editor/ReactQuillWrapper";
 
 export interface EditorBlotConfig {
   enablePlaceholderBlot?: boolean;
@@ -35,15 +34,12 @@ export function deserializer(
 }
 
 export function initializeEditorContent(
-  quill: Quill,
-  defaultValue: string,
+  quill: ReactQuillWrapper,
+  htmlValue: string,
   editorBlotConfig: EditorBlotConfig = DEFAULT_EDITOR_BLOTS,
 ): void {
-  const initialHtml = defaultValue;
-  const initialDelta = initialHtml
-    ? quill.clipboard.convert({
-        html: serializer(initialHtml, editorBlotConfig),
-      })
-    : new Delta();
+  const initialDelta = quill.clipboard.convert({
+    html: serializer(htmlValue, editorBlotConfig),
+  });
   quill.setContents(initialDelta);
 }
