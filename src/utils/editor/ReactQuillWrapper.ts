@@ -30,7 +30,10 @@ export interface ReactQuillWrapperHighlightTextItem {
   textColor: string;
   highlightColor: string;
   hoverTextTooltip?: string;
-  /** Placement of the custom tooltip relative to the highlight. Default: "top". */
+  /** Placement of the custom tooltip relative to the highlight. Default: "top".
+   *
+   * TODO: Placement does not account if the tooltip is outside the viewport.
+   */
   hoverTooltipPlacement?: HighlightTooltipPlacement;
 }
 
@@ -160,12 +163,12 @@ export class ReactQuillWrapper extends Quill {
     const rangesByIndex: Array<{
       index: number;
       length: number;
-        value: {
-          textColor: string;
-          highlightColor: string;
-          hoverTextTooltip?: string;
-          hoverTooltipPlacement?: HighlightTooltipPlacement;
-        };
+      value: {
+        textColor: string;
+        highlightColor: string;
+        hoverTextTooltip?: string;
+        hoverTooltipPlacement?: HighlightTooltipPlacement;
+      };
     }> = [];
 
     for (const item of highlightText) {
