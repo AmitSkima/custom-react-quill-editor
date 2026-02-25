@@ -31,8 +31,7 @@ export interface ReactQuillWrapperHighlightTextItem {
   highlightColor: string;
   hoverTextTooltip?: string;
   /** Placement of the custom tooltip relative to the highlight. Default: "top".
-   *
-   * TODO: Placement does not account if the tooltip is outside the viewport.
+   * The blot flips placement (e.g. top → bottom) or clamps position if the tooltip would go outside the viewport.
    */
   hoverTooltipPlacement?: HighlightTooltipPlacement;
 }

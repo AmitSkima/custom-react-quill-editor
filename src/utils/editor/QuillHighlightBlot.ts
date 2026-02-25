@@ -62,22 +62,69 @@ function getTooltipStyles(
   }
 }
 
+const PLACEMENT_OPPOSITE: Record<
+  HighlightTooltipPlacement,
+  HighlightTooltipPlacement
+> = {
+  top: "bottom",
+  bottom: "top",
+  left: "right",
+  right: "left",
+};
+
+function isTooltipInViewport(el: HTMLElement, doc: Document): boolean {
+  const rect = el.getBoundingClientRect();
+  const vw = doc.documentElement.clientWidth;
+  const vh = doc.documentElement.clientHeight;
+  const pad = 4;
+  return (
+    rect.left >= pad &&
+    rect.right <= vw - pad &&
+    rect.top >= pad &&
+    rect.bottom <= vh - pad
+  );
+}
+
 function showTooltip(node: HTMLElement): void {
   const text = node.getAttribute(TOOLTIP_TEXT_ATTR);
   if (!text) return;
   hideTooltip(node);
-  const placement =
+  let placement: HighlightTooltipPlacement =
     (node.getAttribute(TOOLTIP_PLACEMENT_ATTR) as HighlightTooltipPlacement) ||
     "top";
   const rect = node.getBoundingClientRect();
-  const el = node.ownerDocument.createElement("div");
+  const doc = node.ownerDocument;
+  const el = doc.createElement("div");
   el.className = TOOLTIP_CLASS;
   el.setAttribute("role", "tooltip");
   el.textContent = text;
-  const styles = getTooltipStyles(placement, rect);
-  Object.assign(el.style, styles);
-  node.ownerDocument.body.appendChild(el);
+  doc.body.appendChild(el);
   (node as HTMLElement & { _tooltipEl?: HTMLDivElement })._tooltipEl = el;
+
+  let styles = getTooltipStyles(placement, rect);
+  Object.assign(el.style, styles);
+  if (!isTooltipInViewport(el, doc)) {
+    placement = PLACEMENT_OPPOSITE[placement];
+    styles = getTooltipStyles(placement, rect);
+    Object.assign(el.style, styles);
+  }
+  if (!isTooltipInViewport(el, doc)) {
+    const tooltipRect = el.getBoundingClientRect();
+    const vw = doc.documentElement.clientWidth;
+    const vh = doc.documentElement.clientHeight;
+    const left = Math.max(
+      4,
+      Math.min(tooltipRect.left, vw - tooltipRect.width - 4),
+    );
+    const top = Math.max(
+      4,
+      Math.min(tooltipRect.top, vh - tooltipRect.height - 4),
+    );
+    el.style.left = `${left}px`;
+    el.style.top = `${top}px`;
+    el.style.transform = "none";
+  }
+
   const scrollEl = node.closest(".ql-editor");
   scrollEl?.addEventListener("scroll", () => hideTooltip(node), { once: true });
 }
