@@ -36,8 +36,15 @@ export const DEFAULT_EDITOR_BLOTS: ReactQuillWrapperEditorBlotConfig = {
 };
 
 /**
- * Quill subclass that adds insertPlaceholder() so callers don't need
- * to reference the blot name or use insertEmbed directly.
+ * The React Quill Wrapper class.
+ *
+ * Has extra features for inserting placeholders and highlights.
+ * @example
+ * ```ts
+ * const quill = new ReactQuillWrapper(container, options, editorBlotConfig, highlightText);
+ * quill.insertPlaceholder({ key: "CANDIDATE_NAME" });
+ * quill.applyHighlights(highlightText);
+ * ```
  */
 export class ReactQuillWrapper extends Quill {
   private editorBlotConfig: ReactQuillWrapperEditorBlotConfig;
@@ -146,6 +153,8 @@ export class ReactQuillWrapper extends Quill {
   ): void {
     if (!this.editorBlotConfig.enableHighlightBlot || !highlightText?.length)
       return;
+
+    this.setHighlightText(highlightText);
 
     const delta = this.getContents();
     const rangesByIndex: Array<{
