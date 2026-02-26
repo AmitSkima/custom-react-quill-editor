@@ -246,6 +246,30 @@ export class ReactQuillWrapper extends Quill {
   }
 
   /**
+   * Append HTML to the existing content of the after the current content.
+   *
+   * @example
+   * ```ts
+   * const html = "<p>Hello world 1</p>";
+   * quill.appendHtml(html);
+   *
+   * // Before:
+   * <p>Hello world 0</p>
+   * // After:
+   * <p>Hello world 0</p>
+   * <p>Hello world 1</p>
+   * ```
+   * @param html - The HTML to append.
+   */
+  public appendHtml(html: string): void {
+    const serialized = this.serialize(html);
+    const delta = this.clipboard.convert({ html: serialized });
+    const currentDelta = this.getContents();
+    const newDelta = currentDelta.concat(delta);
+    this.setContents(newDelta);
+  }
+
+  /**
    * Render the HTML with escaped spaces.
    *
    * Used to show the HTML preview in a readable format.

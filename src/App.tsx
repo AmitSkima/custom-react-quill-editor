@@ -86,7 +86,10 @@ export function App() {
     quillRef.current.loadHtml(DEFAULT_VALUE_TWO);
   }, []);
 
-  console.log(formik.values.html);
+  const handleAppendHtml = React.useCallback(() => {
+    if (!quillRef.current) return;
+    quillRef.current.appendHtml(DEFAULT_VALUE_TWO);
+  }, []);
 
   return (
     <div className="flex flex-col space-y-4 p-4">
@@ -118,6 +121,13 @@ export function App() {
           className="rounded-md border px-2 py-1 text-xs"
         >
           Remove highlight content
+        </button>
+        <button
+          type="button"
+          onClick={handleAppendHtml}
+          className="rounded-md border px-2 py-1 text-xs"
+        >
+          Append HTML
         </button>
       </div>
       <form onSubmit={formik.handleSubmit} className="flex flex-col space-y-2">
