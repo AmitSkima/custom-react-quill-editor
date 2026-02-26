@@ -91,7 +91,7 @@ export class ReactQuillWrapper extends Quill {
     if (this.editorBlotConfig.enableHighlightBlot) {
       out = QuillHighlightBlot.storageFromEditorHtml(out);
     }
-    out = out.replace(/&nbsp;/g, " ");
+    out = out.replaceAll("&nbsp;", " ");
     return out;
   }
 
@@ -243,5 +243,24 @@ export class ReactQuillWrapper extends Quill {
   public refreshContent() {
     const html = this.getSemanticHTML();
     this.loadHtml(html);
+  }
+
+  /**
+   * Render the HTML with escaped spaces.
+   *
+   * Used to show the HTML preview in a readable format.
+   *
+   * @example
+   * ```ts
+   * const html = "<p>Hello world</p>";
+   * const escapedHtml = ReactQuillWrapper.renderHtmlWithEscapedSpaces(html);
+   * console.log(escapedHtml); // <p>Hello&nbsp;world</p>
+   * ```
+   *
+   * @param html - The HTML to render.
+   * @returns The HTML with escaped spaces.
+   */
+  static renderHtmlWithEscapedSpaces(html: string): string {
+    return html.replaceAll(" ", "&nbsp;");
   }
 }

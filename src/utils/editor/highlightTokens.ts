@@ -157,12 +157,18 @@ export function htmlWithHighlightText(
       .join("; ");
     const tooltipAttrs = [];
     if (item.hoverTextTooltip != null && item.hoverTextTooltip !== "") {
-      tooltipAttrs.push(`data-hover-tooltip="${escapeAttr(item.hoverTextTooltip)}"`);
+      tooltipAttrs.push(
+        `data-hover-tooltip="${escapeAttr(item.hoverTextTooltip)}"`,
+      );
       if (item.hoverTooltipPlacement) {
-        tooltipAttrs.push(`data-tooltip-placement="${escapeAttr(item.hoverTooltipPlacement)}"`);
+        tooltipAttrs.push(
+          `data-tooltip-placement="${escapeAttr(item.hoverTooltipPlacement)}"`,
+        );
       }
     }
-    const tooltipAttrStr = tooltipAttrs.length ? " " + tooltipAttrs.join(" ") : "";
+    const tooltipAttrStr = tooltipAttrs.length
+      ? " " + tooltipAttrs.join(" ")
+      : "";
     const replacement = `<span class="ql-highlight" style="${escapeAttr(style)}"${tooltipAttrStr}>${escapeHtml(item.text)}</span>`;
     out = out.replace(pattern, replacement);
   }

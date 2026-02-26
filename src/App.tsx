@@ -2,9 +2,9 @@ import React from "react";
 
 import * as Yup from "yup";
 import { useFormik } from "formik";
-import type {
+import {
   ReactQuillWrapper,
-  ReactQuillWrapperHighlightTextItem,
+  type ReactQuillWrapperHighlightTextItem,
 } from "@/utils/editor/ReactQuillWrapper";
 import type { Range } from "quill";
 
@@ -20,10 +20,7 @@ const formValidation = Yup.object().shape({
 
 const DEFAULT_VALUE = `<h1>Hello, world!</h1><p>This is a paragraph with a placeholder {{CANDIDATE_NAME}}</p><p></p><p>This is a paragraph with a highlight</p>`;
 
-const DEFAULT_EDITOR_BLOTS = {
-  enablePlaceholderBlot: true,
-  enableHighlightBlot: true,
-};
+const DEFAULT_VALUE_TWO = `<h1>TWO, world!</h1><p>This is a paragraph with a placeholder {{CANDIDATE_NAME}}</p><p></p><p>This is a paragraph with a highlight</p>`;
 
 const EXAMPLE_HIGHLIGHT_TEXT: ReactQuillWrapperHighlightTextItem[] = [
   {
@@ -63,6 +60,7 @@ export function App() {
 
   const handleChange = React.useCallback(
     (html: string) => {
+      console.log("html", html);
       formik.setFieldValue("html", html);
     },
     [formik],
@@ -83,6 +81,13 @@ export function App() {
     quillRef.current.removeAllHighlights();
   }, []);
 
+  const handleLoadDefaultTwo = React.useCallback(() => {
+    if (!quillRef.current) return;
+    quillRef.current.loadHtml(DEFAULT_VALUE_TWO);
+  }, []);
+
+  console.log(formik.values.html);
+
   return (
     <div className="flex flex-col space-y-4 p-4">
       <div className="flex items-center space-x-2">
@@ -92,6 +97,13 @@ export function App() {
           className="rounded-md border px-2 py-1 text-xs"
         >
           Reset
+        </button>
+        <button
+          type="button"
+          onClick={handleLoadDefaultTwo}
+          className="rounded-md border px-2 py-1 text-xs"
+        >
+          Load Default Two
         </button>
         <button
           type="button"
@@ -127,7 +139,6 @@ export function App() {
             defaultValue={DEFAULT_VALUE}
             onChange={handleChange}
             onSelectionChange={setLastChange}
-            editorBlots={DEFAULT_EDITOR_BLOTS}
           />
         </React.Suspense>
 
@@ -153,12 +164,14 @@ export function App() {
           </button>
         </div>
         <div className="space-y-2 border border-gray-300 p-4">
-          <span>Form HTML Value:</span>
-          <div>{formik.values.html}</div>
-        </div>
-        <div className="space-y-2 border border-gray-300 p-4">
           <span>Rendered HTML:</span>
-          <div dangerouslySetInnerHTML={{ __html: formik.values.html }} />
+          <div
+            dangerouslySetInnerHTML={{
+              __html: ReactQuillWrapper.renderHtmlWithEscapedSpaces(
+                formik.values.html,
+              ),
+            }}
+          />
         </div>
       </div>
     </div>
