@@ -73,6 +73,16 @@ export function App() {
     quillRef.current.loadHtml(DEFAULT_VALUE);
   }, []);
 
+  const handleApplyHighlights = React.useCallback(() => {
+    if (!quillRef.current) return;
+    quillRef.current.applyHighlights(EXAMPLE_HIGHLIGHT_TEXT);
+  }, []);
+
+  const handleRemoveHighlightContent = React.useCallback(() => {
+    if (!quillRef.current) return;
+    quillRef.current.removeAllHighlights();
+  }, []);
+
   return (
     <div className="flex flex-col space-y-4 p-4">
       <div className="flex items-center space-x-2">
@@ -82,6 +92,20 @@ export function App() {
           className="rounded-md border px-2 py-1 text-xs"
         >
           Reset
+        </button>
+        <button
+          type="button"
+          onClick={handleApplyHighlights}
+          className="rounded-md border px-2 py-1 text-xs"
+        >
+          Apply Highlights
+        </button>
+        <button
+          type="button"
+          onClick={handleRemoveHighlightContent}
+          className="rounded-md border px-2 py-1 text-xs"
+        >
+          Remove highlight content
         </button>
       </div>
       <form onSubmit={formik.handleSubmit} className="flex flex-col space-y-2">
@@ -104,7 +128,6 @@ export function App() {
             onChange={handleChange}
             onSelectionChange={setLastChange}
             editorBlots={DEFAULT_EDITOR_BLOTS}
-            highlightText={EXAMPLE_HIGHLIGHT_TEXT}
           />
         </React.Suspense>
 

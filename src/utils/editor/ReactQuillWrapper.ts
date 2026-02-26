@@ -200,6 +200,43 @@ export class ReactQuillWrapper extends Quill {
   }
 
   /**
+   * Remove all highlight formatting from the editor.
+   * Only applies when the highlight blot is enabled; otherwise no-op.
+   */
+  public removeAllHighlights(): void {
+    if (!this.editorBlotConfig.enableHighlightBlot) return;
+
+    const ranges = this.getHighlightRanges();
+    // Sort by index descending so removing doesn't shift subsequent indices
+    ranges.sort((a, b) => b.index - a.index);
+
+    const formatName = QuillHighlightBlot.blotName;
+    for (const { index: at, length: len } of ranges) {
+      // Quill formatText(index, length, formats) – pass false to remove the format
+      this.formatText(at, len, { [formatName]: false });
+    }
+  }
+
+  /**
+   * Collect all [index, length] ranges that have the highlight format.
+   * Uses the editor delta from getContents(); each op with the highlight attribute is one range.
+   */
+  private getHighlightRanges(): { index: number; length: number }[] {
+    const formatName = QuillHighlightBlot.blotName;
+    const delta = this.getContents();
+    const ranges: Array<{ index: number; length: number }> = [];
+    let index = 0;
+    for (const op of delta.ops ?? []) {
+      const length = typeof op.insert === "string" ? op.insert.length : 1;
+      if (op.attributes && formatName in op.attributes) {
+        ranges.push({ index, length });
+      }
+      index += length;
+    }
+    return ranges;
+  }
+
+  /**
    * Refresh the content of the editor.
    * Run serialize() and deserialize() to ensure the content is up to date.
    */

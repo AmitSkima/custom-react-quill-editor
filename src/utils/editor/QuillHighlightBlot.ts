@@ -208,11 +208,13 @@ export class QuillHighlightBlot extends Inline {
   }
 
   format(name: string, value: HighlightBlotValue) {
-    if (
-      name === (this.constructor as typeof QuillHighlightBlot).blotName &&
-      value
-    ) {
-      const el = this.domNode as HTMLElement;
+    const self = this.constructor as typeof QuillHighlightBlot;
+    if (name !== self.blotName) {
+      super.format(name, value);
+      return;
+    }
+    const el = this.domNode as HTMLElement;
+    if (value) {
       el.style.backgroundColor = value.highlightColor ?? "";
       el.style.color = value.textColor ?? "";
       if (value.hoverTextTooltip != null && value.hoverTextTooltip !== "") {
@@ -227,7 +229,12 @@ export class QuillHighlightBlot extends Inline {
         el.removeAttribute(TOOLTIP_PLACEMENT_ATTR);
       }
     } else {
-      super.format(name, value);
+      // Removing highlight: clear our styles/attrs so no leftover span styling remains
+      el.style.backgroundColor = "";
+      el.style.color = "";
+      el.removeAttribute(TOOLTIP_TEXT_ATTR);
+      el.removeAttribute(TOOLTIP_PLACEMENT_ATTR);
     }
+    super.format(name, value);
   }
 }
