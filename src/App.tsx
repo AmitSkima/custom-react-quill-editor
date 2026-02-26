@@ -74,7 +74,7 @@ export function App() {
   }, []);
 
   return (
-    <div className="flex flex-col gap-4 space-y-4 p-4">
+    <div className="flex flex-col space-y-4 p-4">
       <div className="flex items-center space-x-2">
         <button
           type="button"
@@ -84,10 +84,7 @@ export function App() {
           Reset
         </button>
       </div>
-      <form
-        onSubmit={formik.handleSubmit}
-        className="flex flex-col gap-4 space-y-2"
-      >
+      <form onSubmit={formik.handleSubmit} className="flex flex-col space-y-2">
         <input
           {...formik.getFieldProps("subject")}
           type="text"
