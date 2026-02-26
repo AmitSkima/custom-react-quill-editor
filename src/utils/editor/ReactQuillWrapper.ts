@@ -190,7 +190,11 @@ export class ReactQuillWrapper extends Quill {
     }
   }
 
-  public renderEditor() {
+  /**
+   * Refresh the content of the editor.
+   * Run serialize() and deserialize() to ensure the content is up to date.
+   */
+  public refreshContent() {
     const html = this.getSemanticHTML();
     this.loadHtml(html);
   }
