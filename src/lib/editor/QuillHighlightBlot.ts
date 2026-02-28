@@ -3,25 +3,53 @@ import {
   htmlWithHighlightText,
   htmlWithHighlightTokensToHtml,
   semanticHtmlToHighlightTokens,
-} from "@/utils/editor/highlightTokens";
-import type { HighlightTextItem } from "@/utils/editor/highlightTokens";
+} from "@/lib/editor/highlightTokens";
+import type { HighlightTextItem } from "@/lib/editor/highlightTokens";
 
-export type HighlightTooltipPlacement = "top" | "bottom" | "left" | "right";
+export type QuillHighlightBlotTooltipPlacement =
+  | "top"
+  | "bottom"
+  | "left"
+  | "right";
 
-export interface HighlightBlotValue {
-  textColor: string;
-  highlightColor: string;
-  hoverTextTooltip?: string;
-  hoverTooltipPlacement?: HighlightTooltipPlacement;
+/** Inline CSS for HTML; keys are CSS property names (e.g. "background-color", "color"). */
+export type CssStyleObject = Record<string, string>;
+
+function applyStyles(
+  node: HTMLElement,
+  styles: CssStyleObject | undefined,
+): void {
+  if (!styles) return;
+  for (const key of Object.keys(styles)) {
+    node.style.setProperty(key, styles[key]);
+  }
 }
+
+export interface QuillHighlightBlotValue {
+  /** Optional id for this highlight (e.g. filter id). Emitted in quill-highlight-hover event on hover. */
+  highlightId?: string;
+  hoverTextTooltip?: string;
+  hoverTooltipPlacement?: QuillHighlightBlotTooltipPlacement;
+  /** Inline CSS for the ql-highlight span (e.g. { "background-color": "#E6F7FF", "color": "#096DD9" }). Not used for identification or token serialize/deserialize. */
+  styles?: CssStyleObject;
+}
+
+/** Custom event detail when user hovers a highlight that has highlightId. */
+export interface QuillHighlightHoverEventDetail {
+  highlightId: string;
+}
+
+/** Event name to listen for; fired when user hovers a highlight span that has data-highlight-id. */
+export const QUILL_HIGHLIGHT_HOVER_EVENT = "quill-highlight-hover";
 
 const TOOLTIP_PLACEMENT_ATTR = "data-tooltip-placement";
 const TOOLTIP_TEXT_ATTR = "data-hover-tooltip";
+const HIGHLIGHT_ID_ATTR = "data-highlight-id";
 const TOOLTIP_OFFSET = 8;
 const TOOLTIP_CLASS = "ql-editor-highlight-tooltip";
 
 function getTooltipStyles(
-  placement: HighlightTooltipPlacement,
+  placement: QuillHighlightBlotTooltipPlacement,
   rect: DOMRect,
 ): Partial<CSSStyleDeclaration> {
   const base: Partial<CSSStyleDeclaration> = {
@@ -69,8 +97,8 @@ function getTooltipStyles(
 }
 
 const PLACEMENT_OPPOSITE: Record<
-  HighlightTooltipPlacement,
-  HighlightTooltipPlacement
+  QuillHighlightBlotTooltipPlacement,
+  QuillHighlightBlotTooltipPlacement
 > = {
   top: "bottom",
   bottom: "top",
@@ -95,24 +123,37 @@ function showTooltip(node: HTMLElement): void {
   const text = node.getAttribute(TOOLTIP_TEXT_ATTR);
   if (!text) return;
   hideTooltip(node);
-  let placement: HighlightTooltipPlacement =
-    (node.getAttribute(TOOLTIP_PLACEMENT_ATTR) as HighlightTooltipPlacement) ||
-    "top";
+  const highlightId = node.getAttribute(HIGHLIGHT_ID_ATTR);
+  if (highlightId) {
+    document.dispatchEvent(
+      new CustomEvent(QUILL_HIGHLIGHT_HOVER_EVENT, {
+        bubbles: true,
+        detail: { highlightId, node } as QuillHighlightHoverEventDetail,
+      }),
+    );
+  }
+  let placement: QuillHighlightBlotTooltipPlacement =
+    (node.getAttribute(
+      TOOLTIP_PLACEMENT_ATTR,
+    ) as QuillHighlightBlotTooltipPlacement) || "top";
   const rect = node.getBoundingClientRect();
   const doc = node.ownerDocument;
   const el = doc.createElement("div");
   el.className = TOOLTIP_CLASS;
   el.setAttribute("role", "tooltip");
+  el.setAttribute("data-placement", placement);
   el.textContent = text;
   doc.body.appendChild(el);
   (node as HTMLElement & { _tooltipEl?: HTMLDivElement })._tooltipEl = el;
 
   let styles = getTooltipStyles(placement, rect);
   Object.assign(el.style, styles);
+  el.setAttribute("data-placement", placement);
   if (!isTooltipInViewport(el, doc)) {
     placement = PLACEMENT_OPPOSITE[placement];
     styles = getTooltipStyles(placement, rect);
     Object.assign(el.style, styles);
+    el.setAttribute("data-placement", placement);
   }
   if (!isTooltipInViewport(el, doc)) {
     const tooltipRect = el.getBoundingClientRect();
@@ -129,6 +170,8 @@ function showTooltip(node: HTMLElement): void {
     el.style.left = `${left}px`;
     el.style.top = `${top}px`;
     el.style.transform = "none";
+    /* Arrow hidden when position is clamped (no clear target) */
+    el.removeAttribute("data-placement");
   }
 
   const scrollEl = node.closest(".ql-editor");
@@ -176,11 +219,13 @@ export class QuillHighlightBlot extends Inline {
     return out;
   }
 
-  static create(value: HighlightBlotValue) {
+  static create(value: QuillHighlightBlotValue) {
     const node = super.create() as HTMLElement;
     if (value && typeof value === "object") {
-      node.style.backgroundColor = value.highlightColor ?? "";
-      node.style.color = value.textColor ?? "";
+      applyStyles(node, value.styles);
+      if (value.highlightId != null && value.highlightId !== "") {
+        node.setAttribute(HIGHLIGHT_ID_ATTR, value.highlightId);
+      }
       if (value.hoverTextTooltip != null && value.hoverTextTooltip !== "") {
         node.setAttribute(TOOLTIP_TEXT_ATTR, value.hoverTextTooltip);
         if (value.hoverTooltipPlacement) {
@@ -197,17 +242,19 @@ export class QuillHighlightBlot extends Inline {
     return node;
   }
 
-  static formats(node: HTMLElement): HighlightBlotValue {
+  static formats(node: HTMLElement): QuillHighlightBlotValue {
     const placement = node.getAttribute(TOOLTIP_PLACEMENT_ATTR);
+    const highlightId = node.getAttribute(HIGHLIGHT_ID_ATTR);
     return {
-      textColor: node.style.color || "",
-      highlightColor: node.style.backgroundColor || "",
+      highlightId: highlightId ?? undefined,
       hoverTextTooltip: node.getAttribute(TOOLTIP_TEXT_ATTR) ?? undefined,
-      hoverTooltipPlacement: placement as HighlightTooltipPlacement | undefined,
+      hoverTooltipPlacement: placement as
+        | QuillHighlightBlotTooltipPlacement
+        | undefined,
     };
   }
 
-  format(name: string, value: HighlightBlotValue) {
+  format(name: string, value: QuillHighlightBlotValue) {
     const self = this.constructor as typeof QuillHighlightBlot;
     if (name !== self.blotName) {
       super.format(name, value);
@@ -215,8 +262,12 @@ export class QuillHighlightBlot extends Inline {
     }
     const el = this.domNode as HTMLElement;
     if (value) {
-      el.style.backgroundColor = value.highlightColor ?? "";
-      el.style.color = value.textColor ?? "";
+      applyStyles(el, value.styles);
+      if (value.highlightId != null && value.highlightId !== "") {
+        el.setAttribute(HIGHLIGHT_ID_ATTR, value.highlightId);
+      } else {
+        el.removeAttribute(HIGHLIGHT_ID_ATTR);
+      }
       if (value.hoverTextTooltip != null && value.hoverTextTooltip !== "") {
         el.setAttribute(TOOLTIP_TEXT_ATTR, value.hoverTextTooltip);
         if (value.hoverTooltipPlacement) {
@@ -229,12 +280,24 @@ export class QuillHighlightBlot extends Inline {
         el.removeAttribute(TOOLTIP_PLACEMENT_ATTR);
       }
     } else {
-      // Removing highlight: clear our styles/attrs so no leftover span styling remains
-      el.style.backgroundColor = "";
-      el.style.color = "";
+      // Removing highlight: clear styles and tooltip attrs
+      el.style.cssText = "";
+      el.removeAttribute(HIGHLIGHT_ID_ATTR);
       el.removeAttribute(TOOLTIP_TEXT_ATTR);
       el.removeAttribute(TOOLTIP_PLACEMENT_ATTR);
     }
     super.format(name, value);
+  }
+
+  /**
+   * Ensure any active tooltip is removed when the blot is detached
+   * (e.g. when the highlighted text is deleted or the inline is removed).
+   */
+  detach() {
+    hideTooltip(this.domNode as HTMLElement);
+    // Call the base implementation to complete detachment.
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore - detach exists on the underlying Inline/Parchment blot at runtime.
+    super.detach();
   }
 }

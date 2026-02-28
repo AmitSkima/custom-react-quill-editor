@@ -1,8 +1,8 @@
 import Quill, { Delta, type QuillOptions } from "quill";
 
-import { QuillHighlightBlot } from "@/utils/editor/QuillHighlightBlot";
-import { QuillPlaceholderBlot } from "@/utils/editor/QuillPlaceholderBlot";
-import { findTextRangesInDelta } from "@/utils/editor/highlightUtils";
+import { QuillHighlightBlot } from "@/lib/editor/QuillHighlightBlot";
+import { QuillPlaceholderBlot } from "@/lib/editor/QuillPlaceholderBlot";
+import { findTextRangesInDelta } from "@/lib/editor/highlightUtils";
 
 export interface ReactQuillWrapperEditorBlotConfig {
   enablePlaceholderBlot?: boolean;
@@ -17,14 +17,19 @@ export interface ReactQuillWrapperInsertPlaceholderOptions {
 export type HighlightTooltipPlacement = "top" | "bottom" | "left" | "right";
 
 export interface ReactQuillWrapperHighlightTextItem {
+  /** The text to highlight. Matching is case sensitive unless caseInsensitive is true. */
   text: string;
-  textColor: string;
-  highlightColor: string;
+  /** When true, matches text regardless of case (e.g. "hello" matches "Hello", "HELLO"). Default: false. */
+  caseInsensitive?: boolean;
   hoverTextTooltip?: string;
   /** Placement of the custom tooltip relative to the highlight. Default: "top".
    * The blot flips placement (e.g. top → bottom) or clamps position if the tooltip would go outside the viewport.
    */
   hoverTooltipPlacement?: HighlightTooltipPlacement;
+  /** Optional id for this highlight (e.g. filter id). Emitted in quill-highlight-hover event on hover so you can scroll/flash the corresponding row. */
+  highlightId?: string;
+  /** Inline CSS for the ql-highlight span (e.g. { "background-color": "#E6F7FF", "color": "#096DD9" }). Not used for identification or serialize/deserialize. */
+  styles?: Record<string, string>;
 }
 
 /**
@@ -53,11 +58,9 @@ export class ReactQuillWrapper extends Quill {
     container: HTMLElement,
     options: QuillOptions,
     editorBlotConfig: ReactQuillWrapperEditorBlotConfig = DEFAULT_EDITOR_BLOTS,
-    highlightText?: ReactQuillWrapperHighlightTextItem[],
   ) {
     super(container, options);
     this.editorBlotConfig = editorBlotConfig;
-    this.highlightText = highlightText ?? [];
   }
 
   /**
@@ -106,21 +109,22 @@ export class ReactQuillWrapper extends Quill {
 
   /**
    * Set the highlight text for the editor.
-   * @param highlightText - The highlight text to set.
-   *
-   * @example
-   * ```ts
-   * const highlightText: HighlightTextItem[] = [
-   *   { text: "Hello", textColor: "red", highlightColor: "yellow" },
-   *   { text: "World", textColor: "blue", highlightColor: "green" },
-   * ];
-   * quill.setHighlightText(highlightText);
+   * @param highlightText
+
    * ```
    */
   public setHighlightText(
     highlightText: ReactQuillWrapperHighlightTextItem[],
   ): void {
     this.highlightText = highlightText ?? [];
+  }
+
+  /**
+   * Get the highlight text for the editor.
+   * @returns The highlight text.
+   */
+  public getHighlightText(): ReactQuillWrapperHighlightTextItem[] {
+    return this.highlightText;
   }
 
   /**
@@ -161,25 +165,27 @@ export class ReactQuillWrapper extends Quill {
       index: number;
       length: number;
       value: {
-        textColor: string;
-        highlightColor: string;
         hoverTextTooltip?: string;
         hoverTooltipPlacement?: HighlightTooltipPlacement;
+        highlightId?: string;
+        styles?: Record<string, string>;
       };
     }> = [];
 
     for (const item of highlightText) {
       if (!item.text?.trim()) continue;
-      const matches = findTextRangesInDelta(delta, item.text);
+      const matches = findTextRangesInDelta(delta, item.text, {
+        caseInsensitive: item.caseInsensitive,
+      });
       for (const { index, length } of matches) {
         rangesByIndex.push({
           index,
           length,
           value: {
-            textColor: item.textColor,
-            highlightColor: item.highlightColor,
             hoverTextTooltip: item.hoverTextTooltip,
             hoverTooltipPlacement: item.hoverTooltipPlacement,
+            highlightId: item.highlightId,
+            styles: item.styles,
           },
         });
       }

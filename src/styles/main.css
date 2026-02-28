@@ -10,17 +10,20 @@
   button {
     @apply cursor-pointer disabled:cursor-not-allowed;
   }
+
   .ql-placeholder {
     @apply bg-placeholder-blot cursor-default rounded-md px-1.5 py-0.5 font-medium text-white;
   }
 
   /* Highlight blot: editable text with inline styles; fallback if styles missing */
   .ql-highlight {
-    border-radius: 0.125rem;
-    padding: 0 0.125rem;
+    border-radius: 0.25rem;
+    padding: 0rem 0.25rem;
+    margin: 0rem 0.0625rem;
   }
 
   .ql-editor-highlight-tooltip {
+    position: relative;
     max-width: 16rem;
     padding: 0.375rem 0.5rem;
     font-size: 0.75rem;
@@ -33,5 +36,42 @@
       0 2px 4px -2px rgb(0 0 0 / 0.1);
     white-space: normal;
     word-break: break-word;
+  }
+
+  /* Tooltip arrow (points toward the highlight) */
+  .ql-editor-highlight-tooltip::after {
+    content: "";
+    position: absolute;
+    width: 0;
+    height: 0;
+    border: 5px solid transparent;
+  }
+
+  .ql-editor-highlight-tooltip[data-placement="top"]::after {
+    bottom: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    border-top-color: var(--color-highlight-tooltip-background);
+  }
+
+  .ql-editor-highlight-tooltip[data-placement="bottom"]::after {
+    top: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    border-bottom-color: var(--color-highlight-tooltip-background);
+  }
+
+  .ql-editor-highlight-tooltip[data-placement="left"]::after {
+    right: -10px;
+    top: 50%;
+    transform: translateY(-50%);
+    border-left-color: var(--color-highlight-tooltip-background);
+  }
+
+  .ql-editor-highlight-tooltip[data-placement="right"]::after {
+    left: -10px;
+    top: 50%;
+    transform: translateY(-50%);
+    border-right-color: var(--color-highlight-tooltip-background);
   }
 }

@@ -2,11 +2,9 @@ import React from "react";
 import { Delta, type EmitterSource, type Range } from "quill";
 import "quill/dist/quill.snow.css";
 
-import { ReactQuillWrapper } from "@/utils/editor/ReactQuillWrapper";
-
-import { QuillHighlightBlot } from "@/utils/editor/QuillHighlightBlot";
-import { QuillPlaceholderBlot } from "@/utils/editor/QuillPlaceholderBlot";
-import type { ReactQuillWrapperHighlightTextItem } from "@/utils/editor/ReactQuillWrapper";
+import { ReactQuillWrapper } from "@/lib/editor/ReactQuillWrapper";
+import { QuillHighlightBlot } from "@/lib/editor/QuillHighlightBlot";
+import { QuillPlaceholderBlot } from "@/lib/editor/QuillPlaceholderBlot";
 
 ReactQuillWrapper.register(QuillPlaceholderBlot);
 ReactQuillWrapper.register(QuillHighlightBlot);
@@ -60,8 +58,9 @@ export interface ReactQuillEditorProps {
   onLengthChange?: (length: number) => void;
   /**
    * The function to call when the editor is mounted
+   * @param value - Whether the editor is mounted or unmounted
    */
-  onMount?: () => void;
+  onMountChange?: (value: boolean) => void;
   /**
    * The function to call when the editor is unmounted
    */
@@ -70,14 +69,13 @@ export interface ReactQuillEditorProps {
     enableHighlightBlot?: boolean;
   };
   /**
-   * Apply these highlights to matching text in the editor (editable highlighted text).
-   * Applied after content is set and when this prop changes.
-   */
-  highlightText?: ReactQuillWrapperHighlightTextItem[];
-  /**
    * Whether to auto correct the editor content on load
    */
   autoCorrectOnLoad?: boolean;
+  /**
+   * The class name to apply to the editor container
+   */
+  className?: string;
 }
 
 /**
@@ -99,33 +97,28 @@ export const ReactQuillEditor = React.forwardRef<
       onTextChange,
       onSelectionChange,
       onLengthChange,
-      onMount,
+      onMountChange,
       editorBlots,
       autoCorrectOnLoad = true,
-      highlightText,
+      className,
     },
     ref,
   ) => {
     const quillRef = ref as React.RefObject<ReactQuillWrapper | null>;
-    const highlightTextRef = React.useRef<ReactQuillWrapperHighlightTextItem[]>(
-      highlightText ?? [],
-    );
     const containerRef = React.useRef<HTMLDivElement>(null);
     const onChangeRef = React.useRef(onChange);
     const onTextChangeRef = React.useRef(onTextChange);
     const onSelectionChangeRef = React.useRef(onSelectionChange);
     const onLengthChangeRef = React.useRef(onLengthChange);
+    const onMountRef = React.useRef(onMountChange);
 
     React.useLayoutEffect(() => {
       onChangeRef.current = onChange;
       onTextChangeRef.current = onTextChange;
       onSelectionChangeRef.current = onSelectionChange;
       onLengthChangeRef.current = onLengthChange;
+      onMountRef.current = onMountChange;
     });
-
-    React.useEffect(() => {
-      quillRef.current?.enable(!readOnly);
-    }, [readOnly, quillRef]);
 
     const _onTextChange = React.useCallback(
       (...args: OnTextChangeArgs) => {
@@ -161,7 +154,6 @@ export const ReactQuillEditor = React.forwardRef<
           theme: "snow",
         },
         editorBlots,
-        highlightTextRef.current,
       );
 
       quillRef.current = quill;
@@ -176,8 +168,6 @@ export const ReactQuillEditor = React.forwardRef<
 
       onLengthChangeRef.current?.(quill.getContents().length());
 
-      onMount?.();
-
       if (autoCorrectOnLoad) {
         console.warn("[ReactQuillEditor] Auto correcting editor content");
         // We need to call the text change event to auto correct the editor content
@@ -187,8 +177,12 @@ export const ReactQuillEditor = React.forwardRef<
 
       ReactQuillWrapper.debug(debug);
 
+      // Enable or disable the editor based on the readOnly prop
+      quill.enable(!readOnly);
+
+      onMountRef.current?.(true);
+
       return () => {
-        quillRef.current = null;
         container.innerHTML = "";
 
         quill.off(ReactQuillWrapper.events.TEXT_CHANGE, _onTextChange);
@@ -197,19 +191,22 @@ export const ReactQuillEditor = React.forwardRef<
           _onSelectionChange,
         );
         ReactQuillWrapper.debug(false);
+        onMountRef.current?.(false);
       };
     }, [
       quillRef,
       _onTextChange,
       _onSelectionChange,
-      onMount,
       debug,
       editorBlots,
       defaultValue,
       autoCorrectOnLoad,
+      readOnly,
     ]);
 
-    return <div ref={containerRef} />;
+    return (
+      <div id="react-quill-editor" ref={containerRef} className={className} />
+    );
   },
 );
 

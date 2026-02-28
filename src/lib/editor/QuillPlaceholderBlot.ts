@@ -2,7 +2,7 @@ import Embed from "quill/blots/embed";
 import {
   htmlWithPlaceholderTokensToHtml,
   semanticHtmlToPlaceholderTokens,
-} from "@/utils/editor/placeholderTokens";
+} from "@/lib/editor/placeholderTokens";
 
 /**
  * Placeholder blot for the Quill editor.

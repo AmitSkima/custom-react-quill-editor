@@ -1,12 +1,6 @@
-/**
- * Highlight token format: normalized spans with data-highlight, data-text-color, data-highlight-color.
- * Converts semantic HTML from the editor (ql-highlight spans with inline styles) into this
- * storage-friendly form so the saved value doesn't depend on Quill's exact style serialization.
- */
-
-/** Matches ql-highlight span with style attribute; captures style and inner content. */
+/** Matches any ql-highlight span (identification by class only; style/other attrs ignored). */
 const HIGHLIGHT_BLOT_REGEX =
-  /<span(?=[^>]*\bclass="[^"]*ql-highlight[^"]*")(?=[^>]*\bstyle="([^"]*)")[^>]*>([\s\S]*?)<\/span>/g;
+  /<span[^>]*\bclass="[^"]*ql-highlight[^"]*"[^>]*>([\s\S]*?)<\/span>/g;
 
 /**
  * Matches a span with style attribute that does not have data-highlight.
@@ -65,7 +59,9 @@ export function htmlWithHighlightTokensToHtml(html: string): string {
       ]
         .filter(Boolean)
         .join("; ");
-      return `<span class="ql-highlight" style="${escapeAttr(style)}">${innerContent}</span>`;
+      return `<span class="ql-highlight" style="${escapeAttr(
+        style,
+      )}">${innerContent}</span>`;
     },
   );
 }
@@ -86,11 +82,8 @@ export function semanticHtmlToHighlightTokens(html: string): string {
   let prev: string;
   do {
     prev = out;
-    // Unwrap ql-highlight span → inner content only
-    out = out.replace(
-      HIGHLIGHT_BLOT_REGEX,
-      (_, _styleAttr, innerContent) => innerContent,
-    );
+    // Unwrap ql-highlight span → inner content only (no style/attr parsing)
+    out = out.replace(HIGHLIGHT_BLOT_REGEX, (_, innerContent) => innerContent);
     // Unwrap data-highlight span → inner content only
     out = out.replace(
       /<span(?=[^>]*\bdata-highlight\b)[^>]*>([\s\S]*?)<\/span>/g,
@@ -110,10 +103,12 @@ export type HighlightTooltipPlacement = "top" | "bottom" | "left" | "right";
 
 export interface HighlightTextItem {
   text: string;
-  textColor: string;
-  highlightColor: string;
+  /** When true, match and wrap text regardless of case. Default: false. */
+  caseInsensitive?: boolean;
   hoverTextTooltip?: string;
   hoverTooltipPlacement?: HighlightTooltipPlacement;
+  /** Inline CSS for the highlight span (e.g. { "background-color": "#E6F7FF", "color": "#096DD9" }). Not used for identification or token serialize/deserialize. */
+  styles?: Record<string, string>;
 }
 
 function escapeRegex(s: string): string {
@@ -148,13 +143,15 @@ export function htmlWithHighlightText(
 
   let out = html;
   for (const item of sorted) {
-    const pattern = new RegExp(escapeRegex(item.text), "g");
-    const style = [
-      item.textColor && `color: ${item.textColor}`,
-      item.highlightColor && `background-color: ${item.highlightColor}`,
-    ]
-      .filter(Boolean)
-      .join("; ");
+    const flags = item.caseInsensitive ? "gi" : "g";
+    const pattern = new RegExp(escapeRegex(item.text), flags);
+    const styleParts: string[] = [];
+    if (item.styles) {
+      for (const key of Object.keys(item.styles)) {
+        styleParts.push(`${key}: ${item.styles[key]}`);
+      }
+    }
+    const style = styleParts.filter(Boolean).join("; ");
     const tooltipAttrs = [];
     if (item.hoverTextTooltip != null && item.hoverTextTooltip !== "") {
       tooltipAttrs.push(
@@ -169,8 +166,11 @@ export function htmlWithHighlightText(
     const tooltipAttrStr = tooltipAttrs.length
       ? " " + tooltipAttrs.join(" ")
       : "";
-    const replacement = `<span class="ql-highlight" style="${escapeAttr(style)}"${tooltipAttrStr}>${escapeHtml(item.text)}</span>`;
-    out = out.replace(pattern, replacement);
+    const replacer = (match: string) =>
+      `<span class="ql-highlight" style="${escapeAttr(
+        style,
+      )}"${tooltipAttrStr}>${escapeHtml(match)}</span>`;
+    out = out.replace(pattern, replacer);
   }
   return out;
 }

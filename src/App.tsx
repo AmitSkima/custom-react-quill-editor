@@ -5,7 +5,7 @@ import { useFormik } from "formik";
 import {
   ReactQuillWrapper,
   type ReactQuillWrapperHighlightTextItem,
-} from "@/utils/editor/ReactQuillWrapper";
+} from "@/lib/editor/ReactQuillWrapper";
 import type { Range } from "quill";
 
 const ReactQuillEditor = React.lazy(async () => {
@@ -24,16 +24,26 @@ const DEFAULT_VALUE_TWO = `<h1>TWO, world!</h1><p>This is a paragraph with a pla
 
 const EXAMPLE_HIGHLIGHT_TEXT: ReactQuillWrapperHighlightTextItem[] = [
   {
+    highlightId: "1",
     text: "highlight",
-    textColor: "#1e3a5f",
-    highlightColor: "#93c5fd",
     hoverTextTooltip: "This is a tooltip shown on hover of the highlight",
+    styles: {
+      color: "#1e3a5f",
+      "background-color": "#93c5fd",
+      "border-bottom": "1px solid #1e3a5f",
+    },
   },
   {
+    highlightId: "2",
     text: "Hello",
-    textColor: "#14532d",
-    highlightColor: "#bbf7d0",
     hoverTextTooltip: "Amit Chauhan",
+    styles: {
+      color: "#14532d",
+      "background-color": "#bbf7d0",
+      "border-bottom": "2px solid #14532d",
+      "border-right": "2px solid #14532d",
+      "border-radius": "0.375rem",
+    },
   },
 ];
 
@@ -73,6 +83,7 @@ export function App() {
 
   const handleApplyHighlights = React.useCallback(() => {
     if (!quillRef.current) return;
+    quillRef.current.removeAllHighlights();
     quillRef.current.applyHighlights(EXAMPLE_HIGHLIGHT_TEXT);
   }, []);
 
