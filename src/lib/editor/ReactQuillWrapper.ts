@@ -274,23 +274,4 @@ export class ReactQuillWrapper extends Quill {
     const newDelta = currentDelta.concat(delta);
     this.setContents(newDelta);
   }
-
-  /**
-   * Render the HTML with escaped spaces.
-   *
-   * Used to show the HTML preview in a readable format.
-   *
-   * @example
-   * ```ts
-   * const html = "<p>Hello world</p>";
-   * const escapedHtml = ReactQuillWrapper.renderHtmlWithEscapedSpaces(html);
-   * console.log(escapedHtml); // <p>Hello&nbsp;world</p>
-   * ```
-   *
-   * @param html - The HTML to render.
-   * @returns The HTML with escaped spaces.
-   */
-  static renderHtmlWithEscapedSpaces(html: string): string {
-    return html.replaceAll(" ", "&nbsp;");
-  }
 }

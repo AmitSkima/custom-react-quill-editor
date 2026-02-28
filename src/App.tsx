@@ -2,9 +2,10 @@ import React from "react";
 
 import * as Yup from "yup";
 import { useFormik } from "formik";
-import {
+import { renderHtmlWithEscapedSpaces } from "@/lib/editor/renderHtmlWithEscapedSpaces";
+import type {
   ReactQuillWrapper,
-  type ReactQuillWrapperHighlightTextItem,
+  ReactQuillWrapperHighlightTextItem,
 } from "@/lib/editor/ReactQuillWrapper";
 import type { Range } from "quill";
 
@@ -188,9 +189,7 @@ export function App() {
           <span>Rendered HTML:</span>
           <div
             dangerouslySetInnerHTML={{
-              __html: ReactQuillWrapper.renderHtmlWithEscapedSpaces(
-                formik.values.html,
-              ),
+              __html: renderHtmlWithEscapedSpaces(formik.values.html),
             }}
           />
         </div>
